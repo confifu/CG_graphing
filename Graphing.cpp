@@ -270,6 +270,20 @@ GLFWwindow* init() {
 	return window;
 }
 
+float func(int x, int z){
+    // write whatever function u want to evaluate
+    float d = sqrt( x * x + z * z );
+    float y;
+    y = sqrt(400 - x*x - z*z);
+    return y;
+}
+
+float get_y(int dimension, int x, int z = 0){
+    if (dimension == 2) {
+        z = 0;
+    }
+    return func(x, z);
+}
 
 //generate graph data function
 void generate() {
@@ -288,48 +302,31 @@ void generate() {
     //generate graph_3d_1
     for( i = -graph_samples; i < graph_samples; i++ ) {
         for( j = -graph_samples; j < graph_samples; j++ ) {
-          graph_3d_1[index].x = i;
-          graph_3d_1[index].z = j;
-          float d = sqrt( i*i + j*j );
-          if( d == 0.0 )
-            d = 1;
-
-          graph_3d_1[index].y = ( sin( d ) / d ) * graph_y_scale;
-
-          index++;
+            graph_3d_1[index].x = i;
+            graph_3d_1[index].z = j;
+            graph_3d_1[index].y = get_y(3, j, i );// * graph_y_scale;
+            index++;
         }
     }
     //generate graph_3d_2
     index = 0;
     for( i = -graph_samples; i < graph_samples; i++ ) {
         for( j = -graph_samples; j < graph_samples; j++ ) {
-          graph_3d_2[index].x = j;
-          graph_3d_2[index].z = i;
-          float d = sqrt( i*i + j*j );
-          if( d == 0.0 )
-            d = 1;
-
-          graph_3d_2[index].y = ( sin( d ) / d ) * graph_y_scale;
-
-          index++;
+            graph_3d_2[index].x = j;
+            graph_3d_2[index].z = i;
+            graph_3d_2[index].y = get_y(3, j, i );// * graph_y_scale;
+            index++;
         }
     }
 
     //generate graph_2d
     for( i = -graph_samples; i < graph_samples; ++i ) {
-      index = i + graph_samples;
-      //2d - z always 1
-      graph_2d[index].z = 0;
-      //x always same
-      graph_2d[index].x = i;
-      //cant divide by 0, set to our top point
-      if( i == 0 ) {
-        graph_2d[index].y = graph_y_scale;
-      } else {
-        graph_2d[index].y = sin( i ) / i * graph_y_scale;
-      }
+        index = i + graph_samples;
+        //2d - z always 0
+        graph_2d[index].z = 0;
+        graph_2d[index].x = i;
+        graph_2d[index].y = get_y(2, i);  // * graph_y_scale;
     }
-
 
     //buffers for 3d graph
     glGenBuffers( 1, &buffer_3d_1 );
