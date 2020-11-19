@@ -10,10 +10,6 @@
 
 #include <GLFW/glfw3.h>
 
-
-#include <glm/glm.hpp>
-using namespace glm;
-
 // setup -----------------------------------------------------------
 
 //vertex shader w/ two rotation matricies stored
@@ -530,7 +526,7 @@ int main (int argc, char const *argv[])
         
         //clear
         glClear(GL_COLOR_BUFFER_BIT);
-        glClearColor( 0.1, 0.1, 0.1, 1.0 );
+        glClearColor( 0.5, 0.5, 0.5, 1.0 );
         
         //draw
         draw();
