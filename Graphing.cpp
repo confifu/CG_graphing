@@ -1,32 +1,23 @@
-//c libs
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <cstring>
+#include <iostream>
 
-#include <GL/glew.h>
-//opengl (only apple includes tested)
-#ifdef __APPLE__
-    #include <OpenGL/gl3.h>
-    #include <OpenGL/gl.h>
-    #include <OpenGL/glu.h>
-#else
-    
-	#include <GL/gl.h>
-    #include <GL/glu.h>
-#endif
+#include <GL/glew.h>    
+#include <GL/gl.h>
+#include <GL/glu.h>
 
-//glfw
-#define GLFW_INCLUDE_GL3  /* don't drag in legacy GL headers. */
-#define GLFW_NO_GLU       /* don't drag in the old GLU lib - unless you must. */
 #include <GLFW/glfw3.h>
 
 
+#include <glm/glm.hpp>
+using namespace glm;
 
 // setup -----------------------------------------------------------
 
 //vertex shader w/ two rotation matricies stored
-const char *vertex_shader = "\
+char const *vertex_shader = "\
 #version 330\n\
 layout(location = 0) in vec3 position;\
 uniform vec3 offset;\
@@ -50,7 +41,7 @@ void main(){\
 }";
 
 //fragment shader
-const char *fragment_shader = "\
+char const *fragment_shader = "\
 #version 330\n\
 smooth in vec4 theColor;\
 out vec4 outputColor;\
@@ -114,32 +105,64 @@ void resize(GLFWwindow*, int, int);
 
 //setup everything
 GLFWwindow* init() {
-    //init glfw, open window, set opengl 3.2 + core profile only
-    glfwInit();
+    if( !glfwInit() )
+	{
+		fprintf( stderr, "Failed to initialize GLFW\n" );
+		getchar();
+		return 0;
+	}
+
+    glfwWindowHint(GLFW_SAMPLES, 4);
     glfwWindowHint( GLFW_CONTEXT_VERSION_MAJOR, 3 );
-    glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 2 );
+    glfwWindowHint( GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint( GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE );
     glfwWindowHint( GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE );
+
     GLFWwindow* window = glfwCreateWindow( 1000, 800, "2D & 3D Graphing in OpenGL", NULL, NULL);
+    if( window == NULL ){
+		fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
+		getchar();
+		glfwTerminate();
+		return 0;
+	}
+    
+    glfwMakeContextCurrent(window);
+
+    //this part has insignificant errorerror
+    
+    glewExperimental = true; // Needed for core profile
+    if (glewInit() != GLEW_OK) {
+		fprintf(stderr, "Failed to initialize GLEW\n");
+		getchar();
+		glfwTerminate();
+		return 0;
+	}
+
     glViewport( 0, 0, 1000, 800 );
     //bind keyboard callback
     glfwSetKeyCallback(window, keypress );
     //bind window resize callback
-    glfwSetFramebufferSizeCallback(window, resize );
+    glfwSetFramebufferSizeCallback(window, resize);
+
 
     //compile vertex shader
     GLuint v_shader = glCreateShader( GL_VERTEX_SHADER );
-    glShaderSource( v_shader, 1, (const GLchar**)&vertex_shader, 0 );
+    glShaderSource( v_shader, 1, &vertex_shader, NULL);
     glCompileShader( v_shader );
+
     //compile frag shader
     GLuint f_shader = glCreateShader( GL_FRAGMENT_SHADER );
-    glShaderSource( f_shader, 1, (const GLchar**)&fragment_shader, 0 );
+    glShaderSource( f_shader, 1, &fragment_shader, NULL);
     glCompileShader( f_shader );
-    //create the shader program
-    program = glCreateProgram();
+    
+	//create the shader program
+	program = glCreateProgram();
     glAttachShader( program, v_shader );
     glAttachShader( program, f_shader );
+
     glLinkProgram( program );
+
+	glUseProgram(program);
 
     //vertex array object state
     glGenVertexArrays( 1, &vao );
@@ -201,6 +224,7 @@ GLFWwindow* init() {
     //assign axis data
     glBufferData( GL_ARRAY_BUFFER, sizeof( axis ), axis, GL_STATIC_DRAW );
 
+
     //axis marks
     int i;
     int index = 0;
@@ -241,11 +265,14 @@ GLFWwindow* init() {
         index++;
     }
 
+    
     //buffer for axis marks
     glGenBuffers( 1, &buffer_axis_marks);
     glBindBuffer( GL_ARRAY_BUFFER, buffer_axis_marks );
     //assign axis_marks data
     glBufferData( GL_ARRAY_BUFFER, sizeof( axis_marks ), axis_marks, GL_STATIC_DRAW );
+
+    glUseProgram(program);
 
 	return window;
 }
@@ -403,34 +430,34 @@ void draw() {
 void keyboard(GLFWwindow* window) {
     //keyboard management
     if( glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS ) {
-        xpos = xpos - 0.1;
+        xpos = xpos - 0.005;
     }
     if( glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS ) {
-        xpos = xpos + 0.1;
+        xpos = xpos + 0.005;
     }
     if( glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS ) {
-        ypos = ypos + 0.1;
+        ypos = ypos + 0.005;
     }
     if( glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS ) {
-        ypos = ypos - 0.1;
+        ypos = ypos - 0.005;
     }
     if( glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS ) {
-        zpos = zpos - 0.1;
+        zpos = zpos - 0.005;
     }
     if( glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS ) {
-        zpos = zpos + 0.1;
+        zpos = zpos + 0.005;
     }
     if( glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS ) {
-        xang = xang - 0.025;
+        xang = xang - 0.00025;
     }
     if( glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS ) {
-        xang = xang + 0.025;
+        xang = xang + 0.00025;
     }
     if( glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS ) {
-        yang = yang - 0.025;
+        yang = yang - 0.00025;
     }
     if( glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS ) {
-        yang = yang + 0.025;
+        yang = yang + 0.00025;
     }
 }
 
@@ -484,20 +511,13 @@ void keypress(GLFWwindow*, int key, int scancode, int action, int mods) {
     }
 }
 
-//glfw resize
 void resize( GLFWwindow*, int width, int height ) {
     glViewport( 0, 0, width, height );
 }
 
-
-
-
-// the actual program -----------------------------------------------------------
-
 //main
 int main (int argc, char const *argv[])
 {
-    //init glfw, shaders, axis buffer, etc
     GLFWwindow* window = init();
 
     //generate + buffer graph data
@@ -505,22 +525,23 @@ int main (int argc, char const *argv[])
 
     //main loop
     //while window open + not escape key
-    while (glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && glfwWindowShouldClose(window) == 0) {
+    while (glfwGetKey(window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && 
+            glfwWindowShouldClose(window) == 0) {
+        
         //clear
         glClear(GL_COLOR_BUFFER_BIT);
         glClearColor( 0.1, 0.1, 0.1, 1.0 );
+        
         //draw
         draw();
-        //double buffered glfw swap
-        glfwSwapBuffers(window);
-		glfwPollEvents();
+
         //keyboard
         keyboard(window);
-    } //end of loop
 
-    //end
+        glfwSwapBuffers(window);
+		glfwPollEvents();
+    }
+
     glfwTerminate();
-
-    //so long, and thanks for all the fish
     return 0;
 }
